@@ -136,7 +136,7 @@ pivot_wider(
     ## 1 treatment   4       8
     ## 2 placebo     3.5     4
 
-## bind some rows
+## Bind some rows
 
 ``` r
 fellowship_df = 
@@ -165,3 +165,115 @@ lotr_tidy =
     values_to = "words"
   )
 ```
+
+## Joining df
+
+``` r
+pup_df = 
+  read_csv(
+    "~/Desktop/Data Science/Data/FAS_pups.csv",
+    skip = 3,
+    na = c("NA", "", ".")) |>
+  janitor::clean_names()
+```
+
+    ## Rows: 313 Columns: 6
+    ## ── Column specification ────────────────────────────────────────────────────────
+    ## Delimiter: ","
+    ## chr (1): Litter Number
+    ## dbl (5): Sex, PD ears, PD eyes, PD pivot, PD walk
+    ## 
+    ## ℹ Use `spec()` to retrieve the full column specification for this data.
+    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+
+``` r
+litters_df = 
+  read_csv(
+    "~/Desktop/Data Science/Data/FAS_litters.csv", 
+    na = c(".", "", "NA")) |> 
+  janitor::clean_names()
+```
+
+    ## Rows: 49 Columns: 8
+    ## ── Column specification ────────────────────────────────────────────────────────
+    ## Delimiter: ","
+    ## chr (2): Group, Litter Number
+    ## dbl (6): GD0 weight, GD18 weight, GD of Birth, Pups born alive, Pups dead @ ...
+    ## 
+    ## ℹ Use `spec()` to retrieve the full column specification for this data.
+    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+
+Import both
+
+``` r
+pup_df = 
+  read_csv(
+    "~/Desktop/Data Science/Data/FAS_pups.csv",
+    skip = 3,
+    na = c("NA", "", ".")) |>
+  janitor::clean_names() |>
+  mutate(
+    sex = 
+      case_match(
+        sex, 
+        1 ~ "male", 
+        2 ~ "female"),
+    sex = as.factor(sex)) 
+```
+
+    ## Rows: 313 Columns: 6
+    ## ── Column specification ────────────────────────────────────────────────────────
+    ## Delimiter: ","
+    ## chr (1): Litter Number
+    ## dbl (5): Sex, PD ears, PD eyes, PD pivot, PD walk
+    ## 
+    ## ℹ Use `spec()` to retrieve the full column specification for this data.
+    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+
+``` r
+litters_df = 
+  read_csv("~/Desktop/Data Science/Data/FAS_litters.csv", 
+    na = c(".", "", "NA")) |> 
+  janitor::clean_names() |>
+  relocate(litter_number) |>
+  separate(group, into = c("dose", "day_of_tr"), 3) |>
+  mutate(
+    dose = str_to_lower(dose),
+    day_of_tr = as.numeric(day_of_tr),
+    gd_weight_gain = gd18_weight - gd0_weight
+  )
+```
+
+    ## Rows: 49 Columns: 8
+    ## ── Column specification ────────────────────────────────────────────────────────
+    ## Delimiter: ","
+    ## chr (2): Group, Litter Number
+    ## dbl (6): GD0 weight, GD18 weight, GD of Birth, Pups born alive, Pups dead @ ...
+    ## 
+    ## ℹ Use `spec()` to retrieve the full column specification for this data.
+    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+
+``` r
+fas_df = 
+  left_join(pup_df, litters_df, by = "litter_number")
+
+fas_df
+```
+
+    ## # A tibble: 313 × 15
+    ##    litter_number sex   pd_ears pd_eyes pd_pivot pd_walk dose  day_of_tr
+    ##    <chr>         <fct>   <dbl>   <dbl>    <dbl>   <dbl> <chr>     <dbl>
+    ##  1 #85           male        4      13        7      11 con           7
+    ##  2 #85           male        4      13        7      12 con           7
+    ##  3 #1/2/95/2     male        5      13        7       9 con           7
+    ##  4 #1/2/95/2     male        5      13        8      10 con           7
+    ##  5 #5/5/3/83/3-3 male        5      13        8      10 con           7
+    ##  6 #5/5/3/83/3-3 male        5      14        6       9 con           7
+    ##  7 #5/4/2/95/2   male       NA      14        5       9 con           7
+    ##  8 #4/2/95/3-3   male        4      13        6       8 con           7
+    ##  9 #4/2/95/3-3   male        4      13        7       9 con           7
+    ## 10 #2/2/95/3-2   male        4      NA        8      10 con           7
+    ## # ℹ 303 more rows
+    ## # ℹ 7 more variables: gd0_weight <dbl>, gd18_weight <dbl>, gd_of_birth <dbl>,
+    ## #   pups_born_alive <dbl>, pups_dead_birth <dbl>, pups_survive <dbl>,
+    ## #   gd_weight_gain <dbl>

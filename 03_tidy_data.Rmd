@@ -104,7 +104,7 @@ pivot_wider(
   values_from = "mean")
 
 ```
-## bind some rows
+## Bind some rows
 
 ```{r}
 fellowship_df = 
@@ -132,5 +132,58 @@ lotr_tidy =
     names_to = "gender",
     values_to = "words"
   )
+```
+
+## Joining df
+
+```{r}
+pup_df = 
+  read_csv(
+    "~/Desktop/Data Science/Data/FAS_pups.csv",
+    skip = 3,
+    na = c("NA", "", ".")) |>
+  janitor::clean_names()
+
+litters_df = 
+  read_csv(
+    "~/Desktop/Data Science/Data/FAS_litters.csv", 
+    na = c(".", "", "NA")) |> 
+  janitor::clean_names()
+  
+ 
+```
+
+Import both
+```{r}
+pup_df = 
+  read_csv(
+    "~/Desktop/Data Science/Data/FAS_pups.csv",
+    skip = 3,
+    na = c("NA", "", ".")) |>
+  janitor::clean_names() |>
+  mutate(
+    sex = 
+      case_match(
+        sex, 
+        1 ~ "male", 
+        2 ~ "female"),
+    sex = as.factor(sex)) 
+
+litters_df = 
+  read_csv("~/Desktop/Data Science/Data/FAS_litters.csv", 
+    na = c(".", "", "NA")) |> 
+  janitor::clean_names() |>
+  relocate(litter_number) |>
+  separate(group, into = c("dose", "day_of_tr"), 3) |>
+  mutate(
+    dose = str_to_lower(dose),
+    day_of_tr = as.numeric(day_of_tr),
+    gd_weight_gain = gd18_weight - gd0_weight
+  )
+
+fas_df = 
+  left_join(pup_df, litters_df, by = "litter_number")
+
+fas_df
 ```
 
