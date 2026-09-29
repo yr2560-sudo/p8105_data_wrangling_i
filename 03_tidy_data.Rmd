@@ -2,7 +2,7 @@
 title: "03_Tidy_data"
 author: "Yiman Rui"
 date: "2026-09-29"
-output: pdf_document
+output: github_document
 ---
 
 ```{r setup, include=FALSE}
@@ -24,7 +24,7 @@ library(tidyverse)
 
 ```{r}
 pulse_df = 
-  haven::read_sas("data/public_pulse_data.sas7bdat") |> 
+  haven::read_sas("~/Desktop/Data Science/Data/public_pulse_data.sas7bdat") |> 
   janitor::clean_names()
 ```
 
@@ -49,7 +49,7 @@ Just use once ..
 
 ```{r}
 pulse_df = 
-  haven::read_sas("data/public_pulse_data.sas7bdat") |> 
+  haven::read_sas("~/Desktop/Data Science/Data/public_pulse_data.sas7bdat") |> 
   janitor::clean_names() |> 
   pivot_longer(
     bdi_score_bl:bdi_score_12m,
@@ -69,7 +69,7 @@ Import the litters data; keep columns litter number and GD weights; and tidy.
 
 ```{r}
 litters_df = 
-  read_csv("data/FAS_litters.csv", na = c(".", "", "NA")) |> 
+  read_csv("~/Desktop/Data Science/Data/FAS_litters.csv", na = c(".", "", "NA")) |> 
   janitor::clean_names() |> 
   select(litter_number, gd0_weight, gd18_weight) |> 
   pivot_longer(
@@ -86,4 +86,51 @@ litters_df =
   )
 ```
 
+
+```{r}
+analysis_result = 
+  tibble(
+    group = c("treatment", "treatment", "placebo", "placebo"),
+    time = c("pre", "post", "pre", "post"),
+    mean = c(4, 8, 3.5, 4)
+  )
+
+analysis_result
+```
+```{r}
+pivot_wider(
+  analysis_result, 
+  names_from = "time", 
+  values_from = "mean")
+
+```
+## bind some rows
+
+```{r}
+fellowship_df = 
+  readxl::read_excel("~/Desktop/Data Science/Data/LotR_Words.xlsx", range = "B3:D6") |>
+  mutate(movie = "fellowship")
+
+two_towers_df = 
+  readxl::read_excel("~/Desktop/Data Science/Data/LotR_Words.xlsx", range = "F3:H6") |>
+  mutate(movie = "two towers")
+
+return_df = 
+  readxl::read_excel("~/Desktop/Data Science/Data/LotR_Words.xlsx", range = "J3:L6") |>
+  mutate(movie = "return of the king")
+```
+
+Pull all together and tidy
+
+```{r}
+lotr_tidy = 
+  bind_rows(fellowship_df, two_towers_df, return_df) |>
+  janitor::clean_names() |>
+  relocate(movie) |>
+  pivot_longer(
+    female:male,
+    names_to = "gender",
+    values_to = "words"
+  )
+```
 
